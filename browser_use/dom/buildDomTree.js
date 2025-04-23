@@ -473,14 +473,14 @@
       if (!parentElement) return false;
 
       try {
-        return isInViewport && parentElement.checkVisibility({
+        return textNode.isInViewport && parentElement.checkVisibility({
           checkOpacity: true,
           checkVisibilityCSS: true,
         });
       } catch (e) {
         // Fallback if checkVisibility is not supported
         const style = window.getComputedStyle(parentElement);
-        return isInViewport &&
+        return textNode.isInViewport &&
           style.display !== 'none' &&
           style.visibility !== 'hidden' &&
           style.opacity !== '0';
@@ -617,6 +617,11 @@
       "optgroup",   // Option groups
       "fieldset",   // Form fieldsets (can be interactive with legend)
       "legend",     // Fieldset legends
+      "canvas",     // Canvas elements
+      "img",        // Images
+      "video",      // Videos
+      "audio",      // Audio elements
+      "dialog",     // Dialog elements
     ]);
 
     // Define explicit disable attributes and properties
@@ -1035,6 +1040,7 @@
    */
   function buildDomTree(node, parentIframe = null, isParentHighlighted = false) {
     if (debugMode) PERF_METRICS.nodeMetrics.totalNodes++;
+    // console.log("buildDomTree:", node, node.nodeType);
 
     if (!node || node.id === HIGHLIGHT_CONTAINER_ID) {
       if (debugMode) PERF_METRICS.nodeMetrics.skippedNodes++;
@@ -1064,6 +1070,7 @@
 
     // Early bailout for non-element nodes except text
     if (node.nodeType !== Node.ELEMENT_NODE && node.nodeType !== Node.TEXT_NODE) {
+      // console.log("skipping non-element node")
       if (debugMode) PERF_METRICS.nodeMetrics.skippedNodes++;
       return null;
     }
@@ -1095,6 +1102,7 @@
 
     // Quick checks for element nodes
     if (node.nodeType === Node.ELEMENT_NODE && !isElementAccepted(node)) {
+      // console.log("skipping isElementAccepted false")
       if (debugMode) PERF_METRICS.nodeMetrics.skippedNodes++;
       return null;
     }
@@ -1161,9 +1169,11 @@
       // Handle iframes
       if (tagName === "iframe") {
         try {
+          // console.log("Processing iframe:", node, node.nodeType);
           const iframeDoc = node.contentDocument || node.contentWindow?.document;
           if (iframeDoc) {
             for (const child of iframeDoc.childNodes) {
+              // console.log("Processing child of iframe:", child)
               const domElement = buildDomTree(child, node, false);
               if (domElement) nodeData.children.push(domElement);
             }
@@ -1204,6 +1214,8 @@
         }
       }
     }
+
+    // console.log("nodeData:", nodeData)
 
     // Skip empty anchor tags
     if (nodeData.tagName === 'a' && nodeData.children.length === 0 && !nodeData.attributes.href) {
