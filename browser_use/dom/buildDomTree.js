@@ -618,9 +618,6 @@
       "fieldset",   // Form fieldsets (can be interactive with legend)
       "legend",     // Fieldset legends
       "canvas",     // Canvas elements
-      "img",        // Images
-      "video",      // Videos
-      "audio",      // Audio elements
       "dialog",     // Dialog elements
     ]);
 
@@ -791,13 +788,17 @@
           () => shadowRoot.elementFromPoint(centerX, centerY),
           'elementFromPoint'
         );
-        if (!topEl) return false;
+        if (!topEl) {
+          // console.log("showroot topEl failed, return false");
+          return false;
+        }
 
         let current = topEl;
         while (current && current !== shadowRoot) {
           if (current === element) return true;
           current = current.parentElement;
         }
+        // console.log("showroot elementFromPoint failed, return false");
         return false;
       } catch (e) {
         return true;
@@ -810,13 +811,23 @@
 
     try {
       const topEl = document.elementFromPoint(centerX, centerY);
-      if (!topEl) return false;
+      if (!topEl) {
+        // console.log('topEl is empty. return false', topEl);
+        return false;
+      } 
 
       let current = topEl;
       while (current && current !== document.documentElement) {
         if (current === element) return true;
         current = current.parentElement;
       }
+
+      // expand for extra element
+      if (element.tagName.toLocaleLowerCase() == "input" && topEl.toLocaleLowerCase() == "label") {
+        return true;
+      }
+
+      // console.log('topEl', topEl);
       return false;
     } catch (e) {
       return true;
